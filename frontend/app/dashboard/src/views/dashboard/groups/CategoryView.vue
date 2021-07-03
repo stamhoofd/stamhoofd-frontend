@@ -18,7 +18,7 @@
             <p v-if="organization.isCategoryDeactivated(category)" class="error-box">
                 Deze categorie is niet zichtbaar voor leden omdat het activiteiten pakket niet is geactiveerd. Er kan dan maar één categorie in gebruik zijn. Via instellingen kunnen hoofdbeheerders pakketten activeren.
             </p>
-          
+
             <STErrorsDefault :error-box="errorBox" />
 
             <template v-if="categories.length > 0">
@@ -33,8 +33,6 @@
                 </STList>
             </template>
 
-            
-
             <template v-else-if="groups.length > 0">
                 <STList>
                     <STListItem v-if="groups.length > 1" :selectable="true" @click="openAll()">
@@ -44,10 +42,10 @@
                             <span class="icon arrow-right-small gray" />
                         </template>
                     </STListItem>
-                    <STListItem v-for="group in groups" :key="group.id" :selectable="true" @click="openGroup(group)">
+                    <STListItem v-for="group in groups" :key="group.id" :selectable="true" @click="openGroup(group)" @contextmenu.native.prevent="showContextMenu($event,group)">
                         {{ group.settings.name }}
-
                         <template slot="right">
+                            <button class="button icon gray more" @click.stop="showContextMenu($event,group)" />
                             <span class="icon arrow-right-small gray" />
                         </template>
                     </STListItem>
@@ -72,16 +70,42 @@
 </template>
 
 <script lang="ts">
-import { AutoEncoderPatchType } from "@simonbackx/simple-encoding";
-import { ComponentWithProperties, HistoryManager, NavigationController, NavigationMixin } from "@simonbackx/vue-app-navigation";
-import { BackButton,ErrorBox, STErrorsDefault,STInputBox, STList, STListItem, STNavigationBar, STToolbar, Validator } from "@stamhoofd/components";
-import { Group, GroupCategory, GroupCategoryTree, GroupGenderType, GroupPrivateSettings, GroupSettings, Organization, OrganizationGenderType, OrganizationMetaData, Permissions } from "@stamhoofd/structures"
-import { Formatter } from "@stamhoofd/utility";
-import { Component, Mixins,Prop } from "vue-property-decorator";
+import {AutoEncoderPatchType} from "@simonbackx/simple-encoding";
+import {
+  ComponentWithProperties,
+  HistoryManager,
+  NavigationController,
+  NavigationMixin
+} from "@simonbackx/vue-app-navigation";
+import {
+  BackButton,
+  ErrorBox,
+  STErrorsDefault,
+  STInputBox,
+  STList,
+  STListItem,
+  STNavigationBar,
+  STToolbar,
+  Validator
+} from "@stamhoofd/components";
+import {
+  Group,
+  GroupCategory,
+  GroupCategoryTree,
+  GroupGenderType,
+  GroupPrivateSettings,
+  GroupSettings,
+  Organization,
+  OrganizationGenderType,
+  OrganizationMetaData
+} from "@stamhoofd/structures"
+import {Formatter} from "@stamhoofd/utility";
+import {Component, Mixins, Prop} from "vue-property-decorator";
 
-import { OrganizationManager } from '../../../classes/OrganizationManager';
+import {OrganizationManager} from '../../../classes/OrganizationManager';
 import EditCategoryGroupsView from "./EditCategoryGroupsView.vue";
 import EditGroupView from "./EditGroupView.vue";
+import GroupContextMenu from "./GroupContextMenu.vue";
 import GroupMembersView from "./GroupMembersView.vue";
 
 @Component({
@@ -104,7 +128,7 @@ export default class CategoryView extends Mixins(NavigationMixin) {
     category: GroupCategory
 
     mounted() {
-        HistoryManager.setUrl("/category/"+Formatter.slug(this.category.settings.name))    
+        HistoryManager.setUrl("/category/"+Formatter.slug(this.category.settings.name))
         document.title = "Stamhoofd - "+ this.category.settings.name
     }
 
@@ -160,7 +184,8 @@ export default class CategoryView extends Mixins(NavigationMixin) {
 
     openGroup(group: Group) {
         this.show(new ComponentWithProperties(GroupMembersView, {
-            group
+            group,
+            category: this.category
         }))
     }
 
@@ -168,6 +193,16 @@ export default class CategoryView extends Mixins(NavigationMixin) {
         this.show(new ComponentWithProperties(GroupMembersView, {
             category: this.tree
         }))
+    }
+
+    showContextMenu(event,group: Group) {
+      const displayedComponent = new ComponentWithProperties(GroupContextMenu, {
+        x: event.clientX,
+        y: event.clientY + 10,
+        group: group,
+        cycleOffset: 0,
+      });
+      this.present(displayedComponent.setDisplayStyle("overlay"));
     }
 
     createGroup() {
@@ -195,10 +230,10 @@ export default class CategoryView extends Mixins(NavigationMixin) {
         })
 
         p.groups.addPut(group)
-        
-        this.present(new ComponentWithProperties(EditGroupView, { 
-            group, 
-            organization: this.organization.patch(p), 
+
+        this.present(new ComponentWithProperties(EditGroupView, {
+            group,
+            organization: this.organization.patch(p),
             saveHandler: async (patch: AutoEncoderPatchType<Organization>) => {
                 await OrganizationManager.patch(p.patch(patch))
             }
@@ -206,10 +241,10 @@ export default class CategoryView extends Mixins(NavigationMixin) {
     }
 
     editMe() {
-        this.present(new ComponentWithProperties(NavigationController, { 
-            root: new ComponentWithProperties(EditCategoryGroupsView, { 
-                category: this.category, 
-                organization: this.organization, 
+        this.present(new ComponentWithProperties(NavigationController, {
+            root: new ComponentWithProperties(EditCategoryGroupsView, {
+                category: this.category,
+                organization: this.organization,
                 saveHandler: async (patch) => {
                     patch.id = this.organization.id
                     await OrganizationManager.patch(patch)
@@ -217,6 +252,6 @@ export default class CategoryView extends Mixins(NavigationMixin) {
             })
         }).setDisplayStyle("popup"))
     }
-    
+
 }
 </script>
