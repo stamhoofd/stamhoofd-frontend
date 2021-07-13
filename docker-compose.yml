@@ -1,0 +1,82 @@
+version: "3.9"
+
+services:
+  #Builds the shared depenencies and fetches the shared packages
+  common:
+    build: .
+    image: stamhoofd_common
+
+  backend_db:
+    image: mysql:8
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_ROOT_USER: root
+      MYSQL_ROOT_PASSWORD: stamhoofd
+      MYSQL_DATABASE: stamhoofd
+      MYSQL_USER: stamhoofd
+      MYSQL_PASSWORD: stamhoofd
+    volumes:
+      - db:/var/lib/mysql
+    expose:
+      - '3306'
+
+  migrations:
+    build:
+      context: ./backend/app/api
+      dockerfile: Dockerfile.migrations
+    image:
+      stamhoofd_migratios
+    environment:
+      DB_HOST: db
+      DB_USER: stamhoofd
+      DB_PASS: stamhoofd
+      DB_DATABASE: stamhoofd
+    links:
+      - "backend_db:db"
+    depends_on:
+      - backend_db
+    restart: on-failure
+
+  backend:
+    build:
+      context: ./backend/app/api
+      dockerfile: Dockerfile
+    image: stamhoofd_backend
+    expose:
+      - 5000
+    environment:
+      DB_HOST: db
+      DB_USER: stamhoofd
+      DB_PASS: stamhoofd
+      DB_DATABASE: stamhoofd
+      PORT: 5000
+    links:
+      - 'backend_db:db'
+    depends_on:
+      - common
+      - backend_db
+      - migrations
+
+  proxy:
+    image: caddy:2.3.0
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '443:443'
+    links:
+      - "backend:api"
+    depends_on:
+      - backend
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./data:/data
+      - ./config:/config
+    expose:
+      - '80'
+      - '443'
+
+volumes:
+  db:

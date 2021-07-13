@@ -9,11 +9,11 @@ We recently moved to a monorepo to make it easier for new contributors to make c
 
 ## Frontend 
 
-For everything frontend related, you can take a look at the readme in the frontend folder. We have two SPA, written with Vue + TypeScript. The frontend is build on a custom (open-source) framework 'vue-app-navigation' that makes handing responsive and app-like views/navigation/animations easy. You'll see that it is easy to learn and understand.
+For everything frontend related, you can take a look at the [readme in the frontend folder](frontend/README.md). We have two SPA, written with Vue + TypeScript. The frontend is build on a custom (open-source) framework 'vue-app-navigation' that makes handing responsive and app-like views/navigation/animations easy. You'll see that it is easy to learn and understand.
 
 ## Backend
 
-Documentation and code is located in the backend folder.
+[Documentation](backend/app/api/README.md) and code is located in the backend folder. 
 
 ## Shared
 
@@ -60,6 +60,20 @@ Use these commands in `/backend`
   <dt><code>yarn test</code></dt>
   <dd>Run the tests on a separate test database. You'll need to setup .env.test (same as .env, but please modify it first and make sure <code>NODE_ENV=test</code> is in it)</dd>
 </dl>
+
+### Local development
+A docker-compose file exist which automatically does all the required setup for running the backend locally. You can run this command by installing docker and running
+- `docker-compose up`
+
+The docker will do the following things:
+- Start a mysql server
+- Build all shared dependencies
+- Execute all migrations
+- Build and run the backend
+- Run caddy as a reverse-proxy
+
+You will still need to serve the frontend manually.
+
 
 ### Frontend
 
