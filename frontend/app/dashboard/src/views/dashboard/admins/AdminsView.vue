@@ -140,7 +140,7 @@
                 <h2>
                     Beheerders die niet in een groep zitten
                 </h2>
-                <p>Deze beheerders hebben nergens toegang tot, deel ze op in groepen op basis van hun functie in de vereniging.</p>
+                <p>Deze beheerders hebben nergens toegang toe, deel ze op in groepen op basis van hun functie in de vereniging.</p>
 
                 <STList v-if="!loading">
                     <STListItem v-for="admin in getAdminsWithoutRole()" :key="admin.id" :selectable="true" class="right-stack right-description" @click="editAdmin(admin)">

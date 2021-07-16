@@ -116,7 +116,7 @@
             <h2>Gezondheid, hygiëne &amp; slapen</h2>
 
             <Checkbox :checked="getBooleanType(RecordType.CovidHighRisk)" @change="setBooleanType(RecordType.CovidHighRisk, $event)">
-                Hoge riscogroep voor coronavirus
+                Hoge risicogroep voor coronavirus
             </Checkbox>
 
             <Checkbox :checked="getBooleanType(RecordType.TetanusVaccine)" @change="setBooleanType(RecordType.TetanusVaccine, $event)">
